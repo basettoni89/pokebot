@@ -3,7 +3,7 @@ version: "3"
 services:
 
   pokebot:
-    image: r.cfcr.io/davide_mortara/basettoni89/PokeBot:master-arm32v7
+    image: r.cfcr.io/davide_mortara/basettoni89/pokebot:master-arm32v7
     networks:
       - reverse-proxy
 

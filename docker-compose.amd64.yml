@@ -3,7 +3,7 @@ version: "3"
 services:
 
   pokebot:
-    image: r.cfcr.io/davide_mortara/basettoni89/PokeBot:master-amd64
+    image: r.cfcr.io/davide_mortara/basettoni89/pokebot:master-amd64
     networks:
       - reverse-proxy
 
