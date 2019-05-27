@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using PokeBot.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,26 +12,32 @@ using System.Threading.Tasks;
 
 namespace PokeBot.Controllers
 {
-    [Route("745900249:AAGN4eqAhz6NLEn5fh8GZLywacmaH3UMgI8/new-message")]
+    [Route("new-message")]
     [ApiController]
     public class BotController : ControllerBase
     {
-        private const string BOT_TOKEN = "745900249:AAGN4eqAhz6NLEn5fh8GZLywacmaH3UMgI8";
-
         private readonly ILogger<BotController> _logger;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IPokeRepository _pokeRepository;
+        private readonly IConfiguration _configuration;
 
         public BotController(ILogger<BotController> logger,
-            IHttpClientFactory clientFactory)
+            IHttpClientFactory clientFactory,
+            IPokeRepository pokeRepository,
+            IConfiguration configuration)
         {
             this._logger = logger;
             this._clientFactory = clientFactory;
+            this._pokeRepository = pokeRepository;
+            this._configuration = configuration;
         }
 
         [HttpPost]
-        public async Task<ActionResult> OnNewMessage(JObject message)
+        public async Task<ActionResult> OnNewMessage(JObject update)
         {
-            _logger.LogDebug($"Received [{message}]");
+            _logger.LogDebug($"Received [{update}]");
+
+            var message = update["message"];
 
             string content = (string) message["text"];
             int chatId = (int)message["chat"]["id"];
@@ -39,13 +47,19 @@ namespace PokeBot.Controllers
                 var response = JObject.FromObject(
                     new
                     {
-                        chat = chatId,
+                        chat_id = chatId,
                         text = $"{content}. Ok, copy!"
                     });
 
+                var responseString = response.ToString();
+
+                _logger.LogDebug($"Sending [{responseString}]");
+
+                string botToken = _configuration["Bot:Token"];
+
                 var responseResult = await _clientFactory.CreateClient()
-                    .PostAsync($"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                        new StringContent(response.ToString(), Encoding.UTF8, "application/json"));
+                    .PostAsync($"https://api.telegram.org/bot{botToken}/sendMessage",
+                        new StringContent(responseString, Encoding.UTF8, "application/json"));
 
                 _logger.LogDebug($"SendMessage result [{responseResult.StatusCode}]");
             }

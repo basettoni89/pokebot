@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PokeBot.Repositories;
 
 namespace PokeBot
 {
@@ -24,19 +25,26 @@ namespace PokeBot
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IPokeRepository, PokeRepository>();
+
             services.AddHttpClient();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            string botToken = Configuration["Bot:Token"];
 
-            app.UseMvc();
+            app.Map($"/{botToken}", mainApp => {
+                if (env.IsDevelopment())
+                {
+                    mainApp.UseDeveloperExceptionPage();
+                }
+
+                mainApp.UseMvc();
+            });
         }
     }
 }
